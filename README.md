@@ -1,4 +1,4 @@
-# Blackjack Simulation 🎲🃏
+# Blackjack Simulation 🃏
 
 ![Python](https://img.shields.io/badge/Python-v3.8%2B-blue)
 ![NumPy](https://img.shields.io/badge/NumPy-Latest-blue)
@@ -18,7 +18,6 @@ This project was developed as part of *ACM40960 — Projects in Maths Modelling*
 
 ```
 Blackjack_Simulation/
-│
 ├── Blackjack/                        # Source code
 │   ├── Betting.py                    # Betting strategy implementations
 │   ├── Card.py                       # Card class and properties
@@ -31,9 +30,9 @@ Blackjack_Simulation/
 │   ├── Plotting.py                   # Visualization tools
 │   ├── Simulation.py                 # Batch simulation runner
 │   └── Strategy.py                   # Player strategies
-├── images/                           # Visualization outputs
-├── datasets/                         # Analysis datasets
-├── poster/                           # Academic poster
+├── Images/                           # Visualization outputs
+├── Datasets/                         # Analysis datasets
+├── Poster/                           # Academic poster
 ├── Card Counting Detection.ipynb     # Detailed analysis notebook
 ├── requirements.txt                  # Python dependencies
 ├── LICENSE                           # MIT License
@@ -164,18 +163,18 @@ The framework provides comprehensive visualization tools for:
 
 ### Strategy Performance
 
+![Playing Strategy Analysis](Images/BankrollDist.png)
+
 - **Card counting**: Only profitable strategy → **+0.39% house edge**
 - **Basic strategy**: **-0.50% house edge**
 - **Random strategy**: **-34.58% house edge** (worst performance)
 
-![Playing Strategy Analysis](Images/BankrollDist.png)
-
 ### Betting Strategies
+
+![Betting Strategy Analysis](Images/HouseEdge.png)
 
 - **Flat betting**: Negative returns even with card counting
 - **Spread betting**: Increases profitability; *1-25 Wong Out spread* yields **+1.76% edge** in S17 games
-
-![Betting Strategy Analysis](Images/HouseEdge.png)
 
 ### Rule Impact
 
@@ -190,12 +189,15 @@ The framework provides comprehensive visualization tools for:
 
 ### Machine Learning Detection
 
+![Model Performance Comparison](Images/Model_Performance_Comparison.png)
+
 - **Random Forest** best at detecting card counters:
   - **F1 score:** 0.76
   - **Accuracy:** 0.80
 - **Most predictive features**: Bet size, true count, player value, dealer upcard
+- **Random Forest Confusion Matrix**: With high accuracy it can verified, whether a player is counting cards or not.
 
-![Model Performance Comparison](Images/Model_Performance_Comparison.png)
+![Random Forest Confusion Matrix](Images/Random_Forest_Confusion_Matrix.png)
 
 ## Contributing
 
