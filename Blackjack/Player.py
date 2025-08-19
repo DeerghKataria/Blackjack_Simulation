@@ -3,9 +3,11 @@ from Hand import Hand
 class Player:
     def __init__(self, initialBankroll, strategy, betting):
         self.hands: list[Hand] = []
-        self.bankroll = initialBankroll
+        self.initialBankroll = initialBankroll
+        self.rollingBankroll = initialBankroll
         self.strategy = strategy
         self.betting = betting
+        self.totalWagered = 0
 
     def clearHand(self, hand: Hand):
         self.hands.remove(hand)

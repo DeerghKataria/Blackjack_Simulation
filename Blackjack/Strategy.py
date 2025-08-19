@@ -50,7 +50,7 @@ class NoBustStrategy(StrategyFormat):
         self.HouseRules = HouseRules
     
     def hardTotalAction(self, hand, dealerUpCard, softAceCount, count, decksRemaining):
-        handValue = hand.getValue(softAceCount)
+        handValue = hand.getHandValue(softAceCount)
         if handValue < 12:
             return 'H'
         return 'S'

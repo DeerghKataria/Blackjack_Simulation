@@ -8,7 +8,7 @@ class bankrollPlot:
         self.roundBankrolls = []
         
     def recordHandBankroll(self, player):
-        self.handBankrolls.append(player.bankroll)
+        self.handBankrolls.append(player.rollingBankroll)
         
     def recordRoundBankroll(self):
         bankrolls = self.handBankrolls

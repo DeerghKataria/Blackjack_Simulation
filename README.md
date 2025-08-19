@@ -30,6 +30,7 @@ Blackjack_Simulation/
 │   ├── Plotting.py                   # Visualization tools
 │   ├── Simulation.py                 # Batch simulation runner
 │   └── Strategy.py                   # Player strategies
+│   └── SimulationNotebook.ipynb      # Monte Carlo Simulation of BlackJack
 ├── Images/                           # Visualization outputs
 ├── Datasets/                         # Analysis datasets
 ├── Poster/                           # Academic poster
@@ -48,10 +49,11 @@ Blackjack_Simulation/
 5. [Usage Examples](#usage-examples)
 6. [Game Components](#game-components)
 7. [Analysis & Visualization](#analysis--visualization)
-8. [Research Results](#research-results)
-9. [Contributing](#contributing)
-10. [Academic Reference](#academic-reference)
-11. [License](#license)
+8. [Monte Carlo Simulation Notebook Explainer](#monte-carlo-simulation-notebook-explainer)
+9. [Research Results](#research-results)
+10. [Contributing](#contributing)
+11. [Academic Reference](#academic-reference)
+12. [License](#license)
 
 ## Abstract
 
@@ -124,19 +126,21 @@ scipy>=1.7.0
 
 ## Usage Examples
 
-### Basic Simulation
-
-```bash
-# Run the main simulation
-python Simulation.py
-```
-
-### Jupyter Notebook Analysis
+### Counting Card Analysis
 
 ```bash
 # Launch Jupyter and open the analysis notebook
 jupyter notebook
 # Navigate to 'Card Counting Detection.ipynb'
+```
+
+### Monte Carlo Simulation
+
+```bash
+cd Blackjack
+# Launch Jupyter and open the analysis notebook
+jupyter notebook
+# Navigate to 'SimulationNotebook.ipynb'
 ```
 
 ## Game Components
@@ -158,6 +162,17 @@ The framework provides comprehensive visualization tools for:
 - **Confusion matrix for card counter detection**
 - **Strategy performance metrics**
 - **Betting system effectiveness**
+
+## Monte Carlo Simulation Notebook Explainer
+
+`SimulationNotebook.ipynb` runs a Monte Carlo simulation of blackjack games with fully customizable settings. You can adjust **house rules** (e.g., dealer stands on soft 17, blackjack payout, number of decks), choose different **player strategies** (basic strategy, casino play, no-bust, random), enable **card counting**, and apply different **betting spreads** (flat, progressive, or wonging out). Players are configured with an initial bankroll and strategy accuracy, and simulations can be run over many trials and hands to analyze long-term outcomes.  
+
+By modifying the rule parameters, strategy class, betting spread, or simulation settings, you can test how different conditions impact profitability.
+
+After running the notebook, one can expect a similar output:
+
+![BlackJack Monte Carlo](Images/BlackJack_Monte_Carlo_Simulation.jpeg)
+
 
 ## Research Results
 
