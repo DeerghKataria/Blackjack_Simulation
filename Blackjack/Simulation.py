@@ -4,16 +4,19 @@ from Hand import Hand
 from Player import Player
 from Dealer import Dealer
 from Count import HiLoCount
-from Strategy import BasicStrategyS17, BasicStrategyH17, CasinoStrategy, RandomStrategy
-from Betting import FlatSpread, RandomSpread, Spread1_6, Spread1_8, Spread1_12
+from Strategy import BasicStrategyS17, BasicStrategyH17, CasinoStrategy, RandomStrategy, NoBustStrategy
+from Betting import FlatSpread, RandomSpread, Spread1_6, Spread1_8, Spread1_12, Spread1_25_WongOut
 from HouseRules import HouseRules
 from Plotting import bankrollPlot
+import statistics
 
 class BlackjackSimulation:
-    def __init__(self, count, HouseRules):
+    def __init__(self, players, count, HouseRules):
         self.HouseRules = HouseRules
-        self.dealer = Dealer(HouseRules.numDecks, HouseRules.penetration, CasinoStrategy(isCounting = False, strategyAccuracy = 1, count = count, HouseRules=HouseRules))
-        self.players = [Player(initialBankroll=10000, strategy = BasicStrategyS17(isCounting = False, strategyAccuracy = 1, count = count, HouseRules=HouseRules), betting = RandomSpread())]
+        self.dealer = Dealer(HouseRules.numDecks, HouseRules.penetration, 
+                             CasinoStrategy(isCounting = False, strategyAccuracy = 1, 
+                                            count = count, HouseRules=HouseRules))
+        self.players = players
         self.stats = {
             'games_played': 0,
             'player_wins': 0,
@@ -40,6 +43,7 @@ class BlackjackSimulation:
             count.updateCount(card)
         hand = Hand(cards, betSize=betSize)
         player.updateHand(hand)
+        player.totalWagered += betSize
 
     def dealDealerCards(self, count):
         dealerCards = [self.dealer.dealCard(), self.dealer.dealCard()]
@@ -56,6 +60,7 @@ class BlackjackSimulation:
 
     def actionDouble(self, player, hand, softAceCount, count):
         hand.doubleDown()
+        player.totalWagered += hand.betSize / 2
         self.actionHit(hand, count)
         self.stats['doubles'] += 1
         newSoftAceCount = softAceCount
@@ -68,7 +73,7 @@ class BlackjackSimulation:
         
 
     def handlePlayerBlackjack(self, player, hand):
-        player.bankroll += hand.betSize * self.HouseRules.NBJpayout
+        player.rollingBankroll += hand.betSize * self.HouseRules.NBJpayout
         self.dealer.discardPlayerHand(hand)
         player.clearHand(hand)
         self.stats['blackjacks'] += 1
@@ -80,14 +85,15 @@ class BlackjackSimulation:
                 if hand.isBlackjack():
                     self.stats['pushes'] += 1
                 elif hand.isInsured:
-                    player.bankroll += 0
+                    player.rollingBankroll += 0
                 else:
-                    player.bankroll -= hand.betSize
+                    player.rollingBankroll -= hand.betSize
                     self.stats['dealer_wins'] += 1
 
     def handleSplit(self, player, hand, dealerUpCard, count, decksRemaining):
         if player.strategy.shouldSplit(hand, dealerUpCard, count, decksRemaining):
             splitHand = player.splitPair(hand)
+            player.totalWagered += splitHand.betSize
             hand.isSplit = True
             splitHand.isSplit = True
             return splitHand
@@ -113,7 +119,7 @@ class BlackjackSimulation:
         self.dealer.discardPlayerHand(hand)
         player.clearHand(hand)
         self.stats['dealer_wins'] += 1
-        player.bankroll -= hand.betSize
+        player.rollingBankroll -= hand.betSize
         # print(hand.printHand())
         
     def handleInsurance(self, players, count, decksRemaining):
@@ -121,13 +127,14 @@ class BlackjackSimulation:
             for hand in player.hands:
                 if player.strategy.takeInsurance(count, decksRemaining):
                     hand.insureHand()
+                    player.totalWagered += hand.insuranceBet
                     self.stats['insurance_taken'] += 1
                     
     def handleSurrender(self, player, hand):
         player.clearHand(hand)
         self.stats['dealer_wins'] += 1
         self.stats['surrender'] += 1
-        player.bankroll -= hand.betSize * 0.5
+        player.rollingBankroll -= hand.betSize * 0.5
         
     def playerTurn(self, player, count):
         initialHand = player.getInitialHand()
@@ -136,7 +143,9 @@ class BlackjackSimulation:
         if initialHand.isBlackjack():
             self.handlePlayerBlackjack(player, initialHand)
             
-        if player.strategy.shouldSurrender(initialHand, dealerUpCard, count, self.dealer.getDecksRemaining()) and initialHand.getAceCount() == 0:
+        if (player.strategy.shouldSurrender(initialHand, dealerUpCard, count, 
+                                           self.dealer.getDecksRemaining()) and 
+                                            initialHand.getAceCount() == 0):
             self.handleSurrender(player, initialHand)
         
         else:
@@ -155,7 +164,8 @@ class BlackjackSimulation:
                             break
                             
                     if handInPlay.isPair():
-                        splitHand = self.handleSplit(player, handInPlay, dealerUpCard, count, decksRemaining)
+                        splitHand = self.handleSplit(player, handInPlay, dealerUpCard, 
+                                                     count, decksRemaining)
                         if splitHand is not None:
                             self.stats['split_hands'] += 1
                             if splitHand.cards[0].getRank() == 1:
@@ -166,9 +176,16 @@ class BlackjackSimulation:
                                 self.actionHit(splitHand, count)
                     
                     if softAceCount < handInPlay.getAceCount():
-                        handInPlay.action = player.strategy.softTotalAction(handInPlay, dealerUpCard, softAceCount, count)
+                        handInPlay.action = player.strategy.softTotalAction(handInPlay, 
+                                                                            dealerUpCard, 
+                                                                            softAceCount, 
+                                                                            count)
                     else:
-                        handInPlay.action = player.strategy.hardTotalAction(handInPlay, dealerUpCard, softAceCount, count, decksRemaining)
+                        handInPlay.action = player.strategy.hardTotalAction(handInPlay, 
+                                                                            dealerUpCard, 
+                                                                            softAceCount, 
+                                                                            count, 
+                                                                            decksRemaining)
                         
                     if handInPlay.action == 'H':
                         self.actionHit(handInPlay, count)
@@ -195,9 +212,15 @@ class BlackjackSimulation:
                     break
 
             if softAceCount < dealerHand.getAceCount():
-                action = self.dealer.strategy.softTotalAction(dealerHand, dealerUpCard, softAceCount, count)
+                action = self.dealer.strategy.softTotalAction(dealerHand, 
+                                                              dealerUpCard, 
+                                                              softAceCount, 
+                                                              count)
             else:
-                action = self.dealer.strategy.hardTotalAction(dealerHand, dealerUpCard, softAceCount, count)
+                action = self.dealer.strategy.hardTotalAction(dealerHand, 
+                                                              dealerUpCard, 
+                                                              softAceCount, 
+                                                              count)
             
             if action == 'H':
                 self.actionHit(dealerHand, count)
@@ -269,12 +292,12 @@ class BlackjackSimulation:
                     # print('\n\n')
                     if result == "player": 
                         self.stats['player_wins'] += 1
-                        player.bankroll += hand.betSize
+                        player.rollingBankroll += hand.betSize
                         if hand.isDoubled:
                             self.stats['double_wins'] += 1
                     elif result == "dealer":
                         self.stats['dealer_wins'] += 1
-                        player.bankroll -= hand.betSize
+                        player.rollingBankroll -= hand.betSize
                         if hand.isDoubled:
                             self.stats['double_loss'] += 1
                     else:  # push
@@ -293,69 +316,96 @@ class BlackjackSimulation:
         self.dealer.discardDealerHand()
         self.dealer.clearHand()
 
-finalBankroll = []
-handsPlayed = []
-houseEdge = []
-plot = bankrollPlot()
-HouseRules = HouseRules(standS17 = False, DASoffered = True, 
-             LSoffered = True, NBJpayout = 1.5, penetration = 2,
-             minBet = 10, numDecks = 6)
-
-for k in range(20000):
-    # Set Up Count
-    count = HiLoCount()
-
-    sim = BlackjackSimulation(count=count, HouseRules=HouseRules)
-    sim.dealer.shuffleDeck()
-    for i in range(500): 
-        if sim.dealer.penetrationReached():
-            sim.dealer.shuffleDeck()
-            count.resetCount()
+class MonteCarloSimulation:
+    def __init__(self, houserules, playerConfigs):
+        self.HouseRules = houserules
+        self.plotting = bankrollPlot()
+        self.playerConfigs = playerConfigs  
         
-        sim.playSingleGame(count)
-        sim.gameOver(count)
+    def create_players(self, count):
+        players = []
+        for config in self.playerConfigs:
+            player = Player(
+                initialBankroll=config['initialBankroll'],
+                strategy=config['strategy_class'](
+                    isCounting=config['isCounting'],
+                    strategyAccuracy=config['strategyAccuracy'],
+                    count=count,
+                    HouseRules=self.HouseRules
+                ),
+                betting=config['betting']()
+            )
+            players.append(player)
+        return players
         
-        sim.stats['games_played'] += 1
-        plot.recordHandBankroll(sim.players[0])
-    
-    
-    total_hands = sim.stats['games_played'] + sim.stats['split_hands']
-    plot.recordRoundBankroll()
-    # print("\n" + "="*50)
-    # print("BLACKJACK SIMULATION RESULTS")
-    # print("="*50)
-    # print(f"Total Hands Played: {total_hands}")
-    # print(f"Splits: {sim.stats['split_hands']}")
-    # print(f"Doubles: {sim.stats['doubles']}")
-    # print(f"Double Wins: {sim.stats['double_wins']}")
-    # print(f"Double Losses: {sim.stats['double_loss']}")
-    # print(f"Insurance Taken: {sim.stats['insurance_taken']}")
-    # print(f"Surrender: {sim.stats['surrender']}")
-    # print(f"Player Wins: {sim.stats['player_wins']} ({sim.stats['player_wins']/total_hands*100:.1f}%)")
-    # print(f"Dealer Wins: {sim.stats['dealer_wins']} ({sim.stats['dealer_wins']/total_hands*100:.1f}%)")
-    # print(f"Pushes: {sim.stats['pushes']} ({sim.stats['pushes']/total_hands*100:.1f}%)")
-    # print(f"Player Blackjacks: {sim.stats['blackjacks']} ({sim.stats['blackjacks']/total_hands*100:.1f}%)")
-    # for player in sim.players:
-    #     print(f"Final Bankroll: {player.bankroll}")
-    #     print(f"House Edge: {((player.bankroll-10000)/total_hands)*10:.2f}%")
-    # print("="*50)
-    
-    finalBankroll.append(sim.players[0].bankroll)
-    handsPlayed.append(total_hands)
-    houseEdge.append(((sim.players[0].bankroll-10000) / total_hands) * 10)
-    
-import statistics
-meanHands = statistics.mean(handsPlayed)
-meanBR = statistics.mean(finalBankroll)
-median = statistics.median(finalBankroll)
-stdev = statistics.stdev(finalBankroll)
-meanhouseEdge = statistics.mean(houseEdge)
-houseEdge_stdev = statistics.stdev(houseEdge)
-print(meanHands)
-print(meanBR)
-print(median)
-print(stdev)
-print(meanhouseEdge)
-print(houseEdge_stdev)
+    def RunSimulations(self, numTrials, numHands, isTrialsVerbose, count):
+        finalBankroll = []
+        handsPlayed = []
+        houseEdge = []
+        
+        for k in range(numTrials):
+            # Create fresh players for each trial
+            fresh_players = self.create_players(count)
+            
+            game = BlackjackSimulation(players=fresh_players, count=count, 
+                                       HouseRules=self.HouseRules)
+            game.dealer.shuffleDeck()
+            
+            for i in range(numHands): 
+                if game.dealer.penetrationReached():
+                    game.dealer.shuffleDeck()
+                    count.resetCount()
+                
+                game.playSingleGame(count)
+                game.gameOver(count)
+                
+                game.stats['games_played'] += 1
+                self.plotting.recordHandBankroll(game.players[0])
 
-plot.plotMCResults(meanhouseEdge)
+            total_hands = game.stats['games_played'] + game.stats['split_hands']
+            self.plotting.recordRoundBankroll()
+            
+            if isTrialsVerbose:
+                print("\n" + "="*50)
+                print("BLACKJACK GAME RESULTS")
+                print("="*50)
+                print(f"Total Hands Played: {total_hands}")
+                print(f"Splits: {game.stats['split_hands']}")
+                print(f"Doubles: {game.stats['doubles']}")
+                print(f"Double Wins: {game.stats['double_wins']}")
+                print(f"Double Losses: {game.stats['double_loss']}")
+                print(f"Insurance Taken: {game.stats['insurance_taken']}")
+                print(f"Surrender: {game.stats['surrender']}")
+                print(f"Player Wins: {game.stats['player_wins']} ({game.stats['player_wins']/total_hands*100:.1f}%)")
+                print(f"Dealer Wins: {game.stats['dealer_wins']} ({game.stats['dealer_wins']/total_hands*100:.1f}%)")
+                print(f"Pushes: {game.stats['pushes']} ({game.stats['pushes']/total_hands*100:.1f}%)")
+                print(f"Player Blackjacks: {game.stats['blackjacks']} ({game.stats['blackjacks']/total_hands*100:.1f}%)")
+                for player in game.players:
+                    print(f"Final Bankroll: {player.rollingBankroll}")
+                    print(f"House Edge: {((player.rollingBankroll-50000)/(player.totalWagered))*100:.2f}%")
+                print("="*50)
+        
+            finalBankroll.append(game.players[0].rollingBankroll)
+            handsPlayed.append(total_hands)
+            houseEdge.append(((game.players[0].rollingBankroll-50000) / game.players[0].totalWagered) * 100)
+            meanhouseEdge = statistics.mean(houseEdge)
+    
+        if len(finalBankroll) > 1:
+            meanHands = statistics.mean(handsPlayed)
+            meanBR = statistics.mean(finalBankroll)
+            median = statistics.median(finalBankroll)
+            stdev = statistics.stdev(finalBankroll)
+            meanhouseEdge = statistics.mean(houseEdge)
+            houseEdge_stdev = statistics.stdev(houseEdge)
+            
+            print("\n" + "="*50)
+            print("MONTE CARLO SIMULATION RESULTS")
+            print("="*50)
+            print(f"Total Hands Played: {meanHands: .0f}")
+            print(f"Mean Final Bankroll: ${meanBR: .2f}")
+            print(f"Median Final Bankroll: ${median: .2f}")
+            print(f"Final Bankroll Std. Dev.: ${stdev: .2f}")
+            print(f"Mean Player Edge: {meanhouseEdge: .2f}%")
+            print(f"Edge Std. Dev.: {houseEdge_stdev: .2f}%")
+        
+            self.plotting.plotMCResults(meanhouseEdge)

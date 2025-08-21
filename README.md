@@ -43,17 +43,19 @@ Blackjack_Simulation/
 ## Table of Contents
 
 1. [Abstract](#abstract)
-2. [Project Overview](#project-overview)
-3. [Key Features](#key-features)
-4. [Installation](#installation)
-5. [Usage Examples](#usage-examples)
-6. [Game Components](#game-components)
-7. [Analysis & Visualization](#analysis--visualization)
-8. [Monte Carlo Simulation Notebook Explainer](#monte-carlo-simulation-notebook-explainer)
-9. [Research Results](#research-results)
-10. [Contributing](#contributing)
-11. [Academic Reference](#academic-reference)
-12. [License](#license)
+2. [Blackjack Overview](#blackjack-overview)
+3. [Project Overview](#project-overview)
+4. [Key Features](#key-features)
+5. [Installation](#installation)
+6. [Usage Examples](#usage-examples)
+7. [Game Components](#game-components)
+8. [Analysis & Visualization](#analysis--visualization)
+9. [Monte Carlo Simulation Notebook Explainer](#monte-carlo-simulation-notebook-explainer)
+10. [Research Results](#research-results)
+11. [Contributing](#contributing)
+12. [Academic Reference](#academic-reference)
+13. [License](#license)
+14. [References](#references)
 
 ## Abstract
 
@@ -64,6 +66,58 @@ Our study focuses on:
 - Evaluating the **effectiveness of strategies** like basic play, no-bust, random play, and card counting.
 - Analyzing **betting spreads** and **rule variations** (e.g., decks used, payouts, dealer actions).
 - Developing **machine learning models** to detect card counters based on gameplay data.
+
+## Blackjack Overview
+### Game Overview
+Blackjack is a popular casino card game where players aim to beat the dealer by getting cards totalling closer
+to 21 without going over (called "busting").
+
+**Card Totals:**
+- Number cards (2-10): Face value
+- Face cards (Jack, Queen, King): Worth 10 points
+- Ace: Worth 1 or 11 (whichever is better)
+
+**Gameplay:**
+Each player receives two cards initially, as does the dealer (one face-up, one face-down). Players
+can "hit" (take another card) or "stand" (keep current total). Other options include "double down" (double
+bet, take one more card) or "split" (separate identical cards into two hands).
+
+**Winning:**
+- Get 21 with first two cards (Natural Blackjack)
+- Get closer to 21 than dealer without busting
+- Dealer busts whilst you don’t
+
+### Player Actions
+
+- **Hit:** Draw another card from the deck to add to your hand total. You can hit multiple times until you either stand, double down, or bust (exceed 21).
+
+- **Stand:** Keep your current hand total and end your turn without drawing any additional cards. Play then moves to the next player or the dealer.
+
+- **Double Down:** Double your original bet and receive exactly one more card, after which you must stand. This action is only available on your first two cards (or sometimes after splitting).
+
+- **Split:** When dealt two cards of the same rank, you can split them into two separate hands by placing an additional bet equal to your original wager. Each hand is then played independently, starting with one additional card dealt to each.
+
+- **Surrender:** Forfeit half of your bet and give up your hand without playing it out. This option is typically only available on your first two cards and before taking any other action. Not all casinos offer surrender.
+
+- **Insurance:** When the dealer's up card is an Ace, you can place a side bet (up to half your original bet) that the dealer has blackjack. If the dealer has blackjack, insurance pays 2:1; otherwise, you lose the insurance bet and the hand continues normally.
+
+### House Edge
+
+House edge represents the mathematical advantage the casino holds over players in blackjack, expressed as a percentage of each bet. With basic strategy, the house edge typically ranges from 0.5% to 1%, meaning the casino expects to win 50 cent to $1 for every $100 wagered over time.
+
+### Basic Strategy
+Basic strategy is a mathematically-derived set of playing decisions that minimises the house edge in blackjack. It tells players the statistically optimal action (hit, stand, double, split, or surrender) for every possible combination of player hand and dealer up card. Developed through computer analysis of millions of hands, basic strategy reduces the house edge to approximately 0.5% when followed perfectly. The strategy varies slightly depending on specific game rules and number of decks used.
+
+### Card Counting
+Card counting is a legal strategy that tracks the ratio of high cards (10s, face cards, Aces) to low cards (2-6) remaining in the deck. When more high cards remain, players have a statistical advantage and should increase their bets. The most common system assigns values to cards (+1 for low cards, -1 for high cards) to maintain a running count. Whilst not illegal, casinos ban suspected counters and use countermeasures like frequent shuffling and multiple decks to reduce effectiveness.
+
+### Rule Variations
+There are many different variations of blackjack depending on how the casino sets the rules. Some common rules that vary include:
+
+- **S17/H17:** This indicates how the dealer plays. For S17, the dealer will stand if they receive a soft 17 or higher (hand with an ace equal to 17 or higher). They will also stand on any hard 17 or higher. If the rule is H17, the dealer will only stand when they receive a hard 17 or higher.
+- **Double after Split (DAS):** If allowed, players can double on a split hand.
+- **Late Surrender (LS):** If allowed, players can surrender their hand after seeing the dealer's up card.
+- **Natural Blackjack Payout:** Most casinos offer a 3:2 payout when a player hits a natural blackjack (two card hand equal to 21). However, some casinos have recently started to offer a 6:5 payout. Some don't even offer an additional payout, only paying 1:1.
 
 ## Project Overview
 
@@ -98,7 +152,6 @@ pip --version
 ```bash
 # Clone the repository
 git clone https://github.com/ACM40960/project-sean-deergh-blackjack-project
-cd Blackjack
 
 # Create virtual environment
 python -m venv blackjack_env
@@ -169,31 +222,48 @@ The framework provides comprehensive visualization tools for:
 
 By modifying the rule parameters, strategy class, betting spread, or simulation settings, you can test how different conditions impact profitability.
 
-After running the notebook, one can expect a similar output:
+After running the notebook, one can expect the outputted graph shown below. This shows the player's bankroll for each trial as well as the distribution of the player's final bankroll at the end of each trial.
 
 ![BlackJack Monte Carlo](Images/BlackJack_Monte_Carlo_Simulation.jpeg)
 
 
 ## Research Results
 
+The following result for the balckjack simulation were achieved under the follwoing ruleset: H17, DAS offered, LS offered, 8 decks, 4 deck penetration, 3:2 blackjack payout and minimum bet of $15.
+
 ### Strategy Performance
 
 ![Playing Strategy Analysis](Images/BankrollDist.png)
 
-- **Card counting**: Only profitable strategy → **+0.39% house edge**
-- **Basic strategy**: **-0.50% house edge**
-- **Random strategy**: **-34.58% house edge** (worst performance)
+- **Card counting**: Only profitable strategy → **+0.39% player edge**
+- **Basic strategy**: **-0.50% player edge**
+- **Random strategy**: **-34.58% player edge** (worst performance)
 
 ### Betting Strategies
 
 ![Betting Strategy Analysis](Images/HouseEdge.png)
 
 - **Flat betting**: Negative returns even with card counting
-- **Spread betting**: Increases profitability; *1-25 Wong Out spread* yields **+1.76% edge** in S17 games
+- **Spread betting**: Increases profitability; *1-25 Wong Out spread* yields **+1.76% player edge** in S17 games. It is expected that this bet spread performs the best as when in use, the player does not bet when the count is negative which is when the casino has the highest edge.
+- As can be seen, the more aggresive the bet spread, the higher the player's edge is. However, this will make the player more susceptible to being caught card counting by the casino.
 
 ### Rule Impact
+The table below shows how various rules affect the player's edge:
 
-- More decks change the house edge
+<table>
+<tr style="border-bottom: 1.2px solid #fff;"><td>Basic Strategy</td><td>-0.55%</td></tr>
+<tr style="border-bottom: 1.2px solid #fff;"><td><strong>Rule Change</strong></td><td><strong>Difference</strong></td></tr>
+<tr><td>1 Deck</td><td>+0.5%</td></tr>
+<tr><td>2 Decks</td><td>+0.3%</td></tr>
+<tr><td>4 Decks</td><td>+0.08%</td></tr>
+<tr><td>6 Decks</td><td>+0.02%</td></tr>
+<tr><td>Stand Soft 17</td><td>+0.18%</td></tr>
+<tr><td>No Double After Split</td><td>-0.03%</td></tr>
+<tr><td>No Late Surrender</td><td>-0.03%</td></tr>
+<tr><td>6:5 Blackjack Payout</td><td>-1.18%</td></tr>
+</table>
+
+- More decks improve the house edge
 - Favorable rules (e.g., Stand on Soft 17) slightly help players
 - Harsh rules (e.g., 6:5 payout) strongly favor the house (-1.18%)
 
@@ -213,16 +283,6 @@ After running the notebook, one can expect a similar output:
 - **Random Forest Confusion Matrix**: With high accuracy it can verified, whether a player is counting cards or not.
 
 ![Random Forest Confusion Matrix](Images/Random_Forest_Confusion_Matrix.png)
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit issues, feature requests, or pull requests to help improve the simulation framework.
-
-If you find this project helpful:
-- ⭐ Star the repository
-- 🐛 Report bugs or suggest features via issues
-- 🔄 Share with others interested in probability and game theory
-- 📧 Contact for collaboration opportunities
 
 ## Academic Reference
 
@@ -248,5 +308,16 @@ University College Dublin, School of Mathematics
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+## References
+
+The following GitHub repository provided inspiration for the structure of the simulator in this repository:
+https://github.com/jgayda/blackjack-simulator/tree/main
+
+The following website was used to verify our simulator was producing correct house edge results for different strategies:
+https://wizardofodds.com/games/blackjack/calculator/
+
+Basic Strategy Charts and Counting Deviations were found here:
+https://www.blackjackapprenticeship.com/blackjack-strategy-charts/
 
 ---
