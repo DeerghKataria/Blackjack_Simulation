@@ -153,6 +153,9 @@ pip --version
 # Clone the repository
 git clone https://github.com/ACM40960/project-sean-deergh-blackjack-project
 
+# Alternative Link (in case the above repo is private)
+git clone https://github.com/DeerghKataria/Blackjack_Simulation.git
+
 # Create virtual environment
 python -m venv blackjack_env
 
